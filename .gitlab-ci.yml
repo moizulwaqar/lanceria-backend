@@ -1,0 +1,61 @@
+image: python:latest
+
+stages:
+  - build
+  - deploy
+  - production
+
+build_dev:
+  type: build
+  environment: development
+  variables:
+    PROJECT_ENV: develop
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    - python manage.py test
+  only:
+    - staging
+
+
+deploy_dev:
+  type: deploy
+  variables:
+    PROJECT_ENV: develop
+  environment: development
+  script:
+    - bash .staging-deploy.sh
+    - eb init lanceria-stag -p python -r us-east-1
+    - eb use lanceria-stag-env
+    - eb deploy lanceria-stag-env -l eb-python-dev-$CI_COMMIT_SHA
+  only:
+    - staging
+
+build_prod:
+  type: build
+  environment: development
+  variables:
+    PROJECT_ENV: develop
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    - python manage.py test
+  only:
+    - master
+
+deploy_prod:
+  type: deploy
+  variables:
+    PROJECT_ENV: develop
+  environment: development
+  script:
+    - bash .staging-deploy.sh
+    - eb init lanceria -p python -r us-east-1
+    - eb use lanceria-prod-env
+    - eb deploy lanceria-prod-env -l eb-python-dev-$CI_COMMIT_SHA
+  only:
+    - master
